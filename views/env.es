@@ -81,3 +81,6 @@ if (window.isMain) {
   // Add devtool debug message print
   require('./env-parts/devtool-message')
 }
+
+// overlay triggger fix for poi's new window plugins
+require('./env-parts/overlay-trigger-polyfill')
