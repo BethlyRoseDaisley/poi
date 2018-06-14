@@ -100,94 +100,96 @@ app.on ('window-all-closed', () => {
 })
 
 app.on('ready', () => {
-  const {screen} = require('electron')
-  shortcut.register()
-  const {workArea} = screen.getPrimaryDisplay()
-  let {x, y, width, height} = config.get('poi.window', workArea)
-  const validate = (n, min, range) => (n != null && n >= min && n < min + range)
-  const withinDisplay = (d) => {
-    const wa = d.workArea
-    return validate(x, wa.x, wa.width) && validate(y, wa.y, wa.height)
-  }
-  if (!screen.getAllDisplays().some(withinDisplay)) {
-    x = workArea.x
-    y = workArea.y
-  }
-  if (width == null) {
-    width = workArea.width
-  }
-  if (height == null) {
-    height = workArea.height
-  }
-  global.mainWindow = mainWindow = new BrowserWindow({
-    x: x,
-    y: y,
-    width: width,
-    height: height,
-    title: 'poi',
-    icon: poiIconPath,
-    resizable: config.get('poi.content.resizable', true),
-    alwaysOnTop: config.get('poi.content.alwaysOnTop', false),
-    //workaround for low-alpha title-bar
-    titleBarStyle: 'hidden',
-    transparent: process.platform === 'darwin',
-    frame: !config.get('poi.useCustomTitleBar', process.platform === 'win32' || process.platform === 'linux'),
-    enableLargerThanScreen: true,
-    maximizable: config.get('poi.content.resizable', true),
-    fullscreenable: config.get('poi.content.resizable', true),
-    webPreferences: {
-      plugins: true,
-      nodeIntegrationInWorker: true,
-      experimentalFeatures: true,
-      nativeWindowOpen: true,
-    },
-    backgroundColor: process.platform === 'darwin' ? '#00000000' : '#E62A2A2A',
-  })
-  // Default menu
-  mainWindow.reloadArea = 'kan-game webview'
-  if (process.platform === 'darwin') {
-    const {touchBar} = require('./lib/touchbar')
-    mainWindow.setTouchBar(touchBar)
-    if (/electron$/i.test(process.argv[0])) {
-      const icon = nativeImage.createFromPath(`${ROOT}/assets/icons/poi.png`)
-      app.dock.setIcon(icon)
+  setTimeout( () => {
+    const {screen} = require('electron')
+    shortcut.register()
+    const {workArea} = screen.getPrimaryDisplay()
+    let {x, y, width, height} = config.get('poi.window', workArea)
+    const validate = (n, min, range) => (n != null && n >= min && n < min + range)
+    const withinDisplay = (d) => {
+      const wa = d.workArea
+      return validate(x, wa.x, wa.width) && validate(y, wa.y, wa.height)
     }
-  } else {
-    mainWindow.setMenu(null)
-  }
-  mainWindow.loadURL(`file://${__dirname}/index.html${dbg.isEnabled() ? '?react_perf' : ''}`)
-  if (config.get('poi.window.isMaximized', false)) {
-    mainWindow.maximize()
-  }
-  if (config.get('poi.window.isFullScreen', false)) {
-    mainWindow.setFullScreen(true)
-  }
-  if (dbg.isEnabled()) {
-    mainWindow.openDevTools({
-      mode: 'detach',
+    if (!screen.getAllDisplays().some(withinDisplay)) {
+      x = workArea.x
+      y = workArea.y
+    }
+    if (width == null) {
+      width = workArea.width
+    }
+    if (height == null) {
+      height = workArea.height
+    }
+    global.mainWindow = mainWindow = new BrowserWindow({
+      x: x,
+      y: y,
+      width: width,
+      height: height,
+      title: 'poi',
+      icon: poiIconPath,
+      resizable: config.get('poi.content.resizable', true),
+      alwaysOnTop: config.get('poi.content.alwaysOnTop', false),
+      //workaround for low-alpha title-bar
+      titleBarStyle: 'hidden',
+      transparent: process.platform === 'darwin',
+      frame: !config.get('poi.useCustomTitleBar', process.platform === 'win32' || process.platform === 'linux'),
+      enableLargerThanScreen: true,
+      maximizable: config.get('poi.content.resizable', true),
+      fullscreenable: config.get('poi.content.resizable', true),
+      webPreferences: {
+        plugins: true,
+        nodeIntegrationInWorker: true,
+        experimentalFeatures: true,
+        nativeWindowOpen: true,
+      },
+      backgroundColor: process.platform === 'darwin' ? '#00000000' : '#E62A2A2A',
     })
-  }
-  // Never wants navigate
-  mainWindow.webContents.on('will-navigate', (e) => {
-    e.preventDefault()
-  })
-  mainWindow.on('closed', () => {
-    // Close all sub window
-    require('./lib/window').closeWindows()
-    mainWindow = null
-  })
-
-  // Tray icon
-  if (process.platform === 'win32' || process.platform === 'linux') {
-    global.appIcon = appIcon = new Tray(poiIconPath)
-    appIcon.on('click', () => {
-      if (mainWindow.isMinimized()) {
-        mainWindow.restore()
-      } else {
-        mainWindow.show()
+    // Default menu
+    mainWindow.reloadArea = 'kan-game webview'
+    if (process.platform === 'darwin') {
+      const {touchBar} = require('./lib/touchbar')
+      mainWindow.setTouchBar(touchBar)
+      if (/electron$/i.test(process.argv[0])) {
+        const icon = nativeImage.createFromPath(`${ROOT}/assets/icons/poi.png`)
+        app.dock.setIcon(icon)
       }
+    } else {
+      mainWindow.setMenu(null)
+    }
+    mainWindow.loadURL(`file://${__dirname}/index.html${dbg.isEnabled() ? '?react_perf' : ''}`)
+    if (config.get('poi.window.isMaximized', false)) {
+      mainWindow.maximize()
+    }
+    if (config.get('poi.window.isFullScreen', false)) {
+      mainWindow.setFullScreen(true)
+    }
+    if (dbg.isEnabled()) {
+      mainWindow.openDevTools({
+        mode: 'detach',
+      })
+    }
+    // Never wants navigate
+    mainWindow.webContents.on('will-navigate', (e) => {
+      e.preventDefault()
     })
-  }
+    mainWindow.on('closed', () => {
+    // Close all sub window
+      require('./lib/window').closeWindows()
+      mainWindow = null
+    })
+
+    // Tray icon
+    if (process.platform === 'win32' || process.platform === 'linux') {
+      global.appIcon = appIcon = new Tray(poiIconPath)
+      appIcon.on('click', () => {
+        if (mainWindow.isMinimized()) {
+          mainWindow.restore()
+        } else {
+          mainWindow.show()
+        }
+      })
+    }
+  }, 0)
 })
 // http basic auth
 app.on('login', (event, webContents, request, authInfo, callback) => {
